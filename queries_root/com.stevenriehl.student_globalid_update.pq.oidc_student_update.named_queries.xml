@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<queries>
+  <query name="com.stevenriehl.student_globalid_update.pq.oidc_student_update" coreTable="STUDENTS" flattened="true" tags="">
+    <summary>Student GlobalID Auto Update</summary>
+    <description>Students that need to have their OIDC updated to their new email address</description>
+    <columns>
+      <column column="STUDENTS.DCID">STUDENT_DCID</column>
+      <column column="STUDENTS.LASTFIRST">SSO_USER_TYPE</column>
+      <column column="STUDENTS.LASTFIRST">GLOBAL_IDENTIFIER</column>
+    </columns>
+    <sql>
+      <![CDATA[
+        with studentemail as (
+          select
+            ssm.studentsdcid,
+            psc.email
+          from
+            psm_studentcontact psc
+            inner join sync_studentmap ssm
+              on psc.studentid = ssm.studentid
+            inner join psm_studentcontacttype psct
+              on psc.studentcontacttypeid = psct.id
+              and psct.name = 'Self'
+              and psc.email is not null
+        )
+
+        select distinct
+            students.dcid "Student DCID"
+          , 'STUDENT' "SSO User Type"
+          , case when students.enroll_status = 0 then coalesce(studentemail.email, '#delete') else '#delete' end "Global Identifier"
+        from
+          students
+          left join accessstudent
+            on accessstudent.studentsdcid = students.dcid
+          left join pcas_externalaccountmap
+            on pcas_externalaccountmap.pcas_accounttoken = accessstudent.accountidentifier
+          left join (select * from studentemail) studentemail
+            on studentemail.studentsdcid = students.dcid
+        where
+          (
+            pcas_externalaccountmap.openiduseraccountid is not null and students.enroll_status != 0
+          ) or (
+            students.enroll_status = 0 and pcas_externalaccountmap.openiduseraccountid is null and studentemail.email is not null
+          ) or (
+            students.enroll_status = 0 and pcas_externalaccountmap.openiduseraccountid != studentemail.email
+          )
+      ]]>
+    </sql>
+  </query>
+</queries>

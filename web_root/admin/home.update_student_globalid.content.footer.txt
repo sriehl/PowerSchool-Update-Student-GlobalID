@@ -1,0 +1,45 @@
+<!-- Update Student OIDC -->
+~[if#admin.security.inrole=9]
+~[if#distCheck.district.office]
+<script>
+
+  fetch('/ws/schema/query/com.stevenriehl.student_globalid_update.pq.oidc_student_update', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+    .then(response => response.json())
+    .then(data => {
+      if (typeof (data.record) !== 'object') { return false }
+
+      data.record.forEach(student => {
+        const frn = `001${student.student_dcid}`;
+        const url = `/admin/students/accessaccounts.html?frn=${frn}`;
+        const email = student.global_identifier;
+
+        let formData = new URLSearchParams()
+        formData.append('ac', 'brij:admin-accountmanagement-pkg/SaveStudentAccessAccounts');
+        formData.append('doc', '/admin/students/accessaccounts.html');
+        formData.append('render_in_java', 'true');
+        formData.append('frn', frn);
+        formData.append('frn', frn);
+        formData.append('student.allowStudentWebAccess', '1');
+        formData.append('allowStudentWebAccess', '1');
+
+        if (email === '#delete') {
+          formData.append('commonUser.openIdUserAccountId', '');
+        } else {
+          formData.append('commonUser.openIdUserAccountId', email);
+        }
+
+        fetch(url)
+          .then(response => response.text())
+          .then(body => {
+            const parser = new DOMParser();
+            const guardianWebPassword = parser.parseFromString(body, 'text/html').getElementById('guardianWebPassword').value;
+            formData.append('student.guardianWebPassword', guardianWebPassword);
+            fetch(url, { method: 'POST', body: formData });
+          });
+      });
+    });
+
+</script>
+[/if#distCheck]
+[/if#admin]
+<!-- end Update Student OIDC -->

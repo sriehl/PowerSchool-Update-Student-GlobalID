@@ -1,0 +1,5 @@
+<permission_mappings>
+  <permission name="/admin/students/accessaccounts.html">
+    <implies allow="post">/ws/schema/query/com.stevenriehl.student_globalid_update.pq.oidc_student_update</implies>
+  </permission>
+</permission_mappings>
