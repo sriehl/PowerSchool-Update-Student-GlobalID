@@ -10,7 +10,7 @@
 
       data.record.forEach(student => {
         const frn = `001${student.student_dcid}`;
-        const url = `/admin/students/accessaccounts.html?frn=${frn}`;
+        const url = `/admin/students/accessaccounts.html?frn=${frn}&no-store-lp=1`;
         const email = student.global_identifier;
 
         let formData = new URLSearchParams()
